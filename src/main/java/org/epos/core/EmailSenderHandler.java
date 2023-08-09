@@ -1,6 +1,7 @@
 package org.epos.core;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,9 +54,9 @@ public class EmailSenderHandler {
 		{
 			props.setProperty("mail.smtp.auth", "true");
 			props.setProperty("mail.smtp.host", System.getenv("MAIL_HOST"));
-			props.setProperty("mail.smtp.socketFactory.port", "465");
-			props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 			props.setProperty("mail.smtp.port", "587"); //SMTP Port
+			//props.setProperty("mail.smtp.socketFactory.port", "465");
+			//props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 		}
 
 		Authenticator auth = new Authenticator() {
@@ -67,6 +68,11 @@ public class EmailSenderHandler {
 		
 		if(System.getenv("ENVIRONMENT_TYPE").equals("production")) {
 			for(JsonElement email : mails) {
+
+				System.out.println("Preparing email to: "+email.getAsString());
+				System.out.println("Using properties: "+props.toString());
+				System.out.println("Using Auth: "+auth.toString());
+				
 				System.out.println("Creating a new session");
 				Session session = Session.getDefaultInstance(props, auth);
 				System.out.println("New session created, sending email");
@@ -78,6 +84,11 @@ public class EmailSenderHandler {
 			String[] devMails =System.getenv("DEV_EMAILS").split(";");
 
 			for(String email : devMails) {
+
+				System.out.println("Preparing email to: "+email.toString());
+				System.out.println("Using properties: "+props.toString());
+				System.out.println("Using Auth: "+auth.toString());
+				
 				System.out.println("Creating a new session");
 				Session session = Session.getDefaultInstance(props, auth);
 				System.out.println("New session created, sending email");
@@ -86,10 +97,6 @@ public class EmailSenderHandler {
 				System.out.println("End session");
 			}
 		}
-
-		
-
-
 
 		return new HashMap<String, Object>();
 	}
