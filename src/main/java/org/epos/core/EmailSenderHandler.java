@@ -64,15 +64,30 @@ public class EmailSenderHandler {
 				return new PasswordAuthentication( System.getenv("MAIL_USER"), System.getenv("MAIL_PASSWORD"));
 			}
 		};
+		
+		if(System.getenv("ENVIRONMENT_TYPE").equals("production")) {
+			for(JsonElement email : mails) {
+				System.out.println("Creating a new session");
+				Session session = Session.getDefaultInstance(props, auth);
+				System.out.println("New session created, sending email");
+				org.epos.api.utility.EmailUtil.sendEmail(session, email.getAsString(),sendEmail.getSubject(), "From: "+requestParams.get("email").toString()+"\n"
+						+ sendEmail.getBodyText());
+				System.out.println("End session");
+			}
+		}else {
+			String[] devMails =System.getenv("DEV_EMAILS").split(";");
 
-		for(JsonElement email : mails) {
-			System.out.println("Creating a new session");
-			Session session = Session.getDefaultInstance(props, auth);
-			System.out.println("New session created, sending email");
-			org.epos.api.utility.EmailUtil.sendEmail(session, email.getAsString(),sendEmail.getSubject(), "From: "+requestParams.get("email").toString()+"\n"
-					+ sendEmail.getBodyText());
-			System.out.println("End session");
+			for(String email : devMails) {
+				System.out.println("Creating a new session");
+				Session session = Session.getDefaultInstance(props, auth);
+				System.out.println("New session created, sending email");
+				org.epos.api.utility.EmailUtil.sendEmail(session, email,sendEmail.getSubject(), "From: "+requestParams.get("email").toString()+"\n"
+						+ sendEmail.getBodyText());
+				System.out.println("End session");
+			}
 		}
+
+		
 
 
 
