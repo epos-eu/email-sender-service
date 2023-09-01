@@ -55,9 +55,7 @@ public class EmailSenderHandler {
 
 	private static String subjectForwardedMessage = "EPOS Data Portal | Receipt Confirmation – Request for Information";
 
-	private static String forwardedMessage = "Dear User,\n"
-			+ "\n"
-			+ "Thank you for your message. \n"
+	private static String forwardedMessage = "Thank you for your message. \n"
 			+ "We will get in touch with you shortly.\n"
 			+ "Copy of the message.\n\n-----------------------------------------------------\n\n";
 
@@ -69,17 +67,19 @@ public class EmailSenderHandler {
 		JsonObject payObj = gson.fromJson(payload, JsonObject.class);
 		JsonArray mails = payObj.get("emails").getAsJsonArray();
 		String from = requestParams.get("email").toString();
+		String firstName = requestParams.get("firstName").toString();
+		String lastName = requestParams.get("lastName").toString();
 
 		if(System.getenv("ENVIRONMENT_TYPE").equals("production")) {
 			String[] emails = new String[mails.size()];
 			for (int i = 0; i < mails.size(); i++) emails[i] = mails.getAsJsonArray().get(i).getAsString();
 
 			if(System.getenv("MAIL_TYPE").equals("SMTP")){
-				sendViaSMTP(emails, from, sendEmail.getSubject(), sendEmail.getBodyText());
+				sendViaSMTP(emails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
 			}
 			if(System.getenv("MAIL_TYPE").equals("API")){
 				try {
-					sendViaAPI(emails, from, sendEmail.getSubject(), sendEmail.getBodyText());
+					sendViaAPI(emails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
 				} catch (IOException | InterruptedException e) {
 					LOGGER.error(e.getLocalizedMessage());
 				}
@@ -87,11 +87,11 @@ public class EmailSenderHandler {
 		}else {
 			String[] devMails =System.getenv("DEV_EMAILS").split(";");
 			if(System.getenv("MAIL_TYPE").equals("SMTP")){
-				sendViaSMTP(devMails, from, sendEmail.getSubject(), sendEmail.getBodyText());
+				sendViaSMTP(devMails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
 			}
 			if(System.getenv("MAIL_TYPE").equals("API")){
 				try {
-					sendViaAPI(devMails, from, sendEmail.getSubject(), sendEmail.getBodyText());
+					sendViaAPI(devMails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
 				} catch (IOException | InterruptedException e) {
 					LOGGER.error(e.getLocalizedMessage());
 				}
@@ -101,7 +101,7 @@ public class EmailSenderHandler {
 		return new HashMap<String, Object>();
 	}
 
-	public static void sendViaSMTP(String[] emails, String from, String subject, String bodyText) {
+	public static void sendViaSMTP(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) {
 		Properties props = new Properties();
 		{
 			props.setProperty("mail.smtp.auth", "true");
@@ -127,7 +127,7 @@ public class EmailSenderHandler {
 		}
 	}
 
-	public static void sendViaAPI(String[] emails, String from, String subject, String bodyText) throws IOException, InterruptedException {	
+	public static void sendViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
 		for(String email : emails) {
 			//String cmd = "curl -s --user '"+System.getenv("MAIL_API_KEY")+"' "+System.getenv("MAIL_API_URL")+" -F from='"+System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">' -F to="+email+" -F subject='"+subject+"' -F text='From: "+from+"' -F text='" + bodyText+"'";
 			OkHttpClient client = new OkHttpClient();
@@ -154,13 +154,14 @@ public class EmailSenderHandler {
 			try (Response response = client.newCall(request).execute()) {
 				if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 				response.body().string();
-				sendForwardViaAPI(emails, from, subjectForwardedMessage, forwardedMessage+bodyText);
+				sendForwardViaAPI(emails, from, subjectForwardedMessage, forwardedMessage+bodyText, firstName, lastName);
 			}
 		}
 	}
 
-	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText) throws IOException, InterruptedException {	
-		//String cmd = "curl -s --user '"+System.getenv("MAIL_API_KEY")+"' "+System.getenv("MAIL_API_URL")+" -F from='"+System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">' -F to="+email+" -F subject='"+subject+"' -F text='From: "+from+"' -F text='" + bodyText+"'";
+	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
+		String dear = "Dear User "+firstName!=null? firstName+" ": ""+lastName!=null? lastName: ""+",\n\n";
+		
 		OkHttpClient client = new OkHttpClient();
 
 		String[] apiKey = System.getenv("MAIL_API_KEY").split(":");
@@ -172,7 +173,7 @@ public class EmailSenderHandler {
 				.addFormDataPart("from", System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">")
 				.addFormDataPart("to", from)
 				.addFormDataPart("subject", subject)
-				.addFormDataPart("text", bodyText)
+				.addFormDataPart("text", dear+bodyText)
 				.build();
 
 		Request request = new Request.Builder()

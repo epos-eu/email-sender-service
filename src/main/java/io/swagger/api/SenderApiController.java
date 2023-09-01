@@ -51,6 +51,8 @@ public class SenderApiController extends ApiController implements SenderApi{
 			@Parameter(in = ParameterIn.DEFAULT, description = "", schema=@Schema()) @Valid @RequestBody Email body) {
 		String accept = request.getHeader("Accept");
 		String userEmail = request.getParameter("userEmail");
+		String firstName = request.getParameter("firstName");
+		String lastName = request.getParameter("lastName");
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				final Map<String, Object> requestParameters = new HashMap<String, Object>();
@@ -61,6 +63,8 @@ public class SenderApiController extends ApiController implements SenderApi{
 				requestParameters.put("id", id);
 				requestParameters.put("type", contactType);
 				requestParameters.put("email", userEmail);
+				requestParameters.put("firstName", firstName);
+				requestParameters.put("lastName", lastName);
 				log.info(requestParameters.toString());
 
 				redirectRequest(ServiceType.SENDER, requestParameters, body);
