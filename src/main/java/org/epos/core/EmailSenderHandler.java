@@ -160,7 +160,10 @@ public class EmailSenderHandler {
 	}
 
 	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
-		String dear = "Dear User "+firstName!=null? firstName+" ": ""+lastName!=null? lastName: ""+",\n\n";
+		String dear = "Dear User ";
+		if(firstName!=null) dear+=firstName+" ";
+		if(lastName!=null) dear+=lastName;
+		dear+=",\n";
 		
 		OkHttpClient client = new OkHttpClient();
 
@@ -173,7 +176,8 @@ public class EmailSenderHandler {
 				.addFormDataPart("from", System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">")
 				.addFormDataPart("to", from)
 				.addFormDataPart("subject", subject)
-				.addFormDataPart("text", dear+bodyText)
+				.addFormDataPart("text", dear)
+				.addFormDataPart("text", bodyText)
 				.build();
 
 		Request request = new Request.Builder()
