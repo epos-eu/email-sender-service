@@ -23,6 +23,7 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.swing.event.ListSelectionEvent;
 import javax.xml.bind.DatatypeConverter;
 
 import org.epos.api.utility.EmailUtil;
@@ -51,6 +52,14 @@ public class EmailSenderHandler {
 	private static final String PARAMS = "params";
 
 	private static Gson gson = new Gson();
+
+	private static String subjectForwardedMessage = "EPOS Data Portal | Receipt Confirmation – Request for Information";
+
+	private static String forwardedMessage = "Dear User,\n"
+			+ "\n"
+			+ "Thank you for your message. \n"
+			+ "We will get in touch with you shortly.\n"
+			+ "Copy of the message.\n\n-----------------------------------------------------\n\n";
 
 
 
@@ -145,8 +154,38 @@ public class EmailSenderHandler {
 			try (Response response = client.newCall(request).execute()) {
 				if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 				response.body().string();
+				sendForwardViaAPI(emails, from, subjectForwardedMessage, forwardedMessage+bodyText);
 			}
 		}
+	}
+
+	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText) throws IOException, InterruptedException {	
+		//String cmd = "curl -s --user '"+System.getenv("MAIL_API_KEY")+"' "+System.getenv("MAIL_API_URL")+" -F from='"+System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">' -F to="+email+" -F subject='"+subject+"' -F text='From: "+from+"' -F text='" + bodyText+"'";
+		OkHttpClient client = new OkHttpClient();
+
+		String[] apiKey = System.getenv("MAIL_API_KEY").split(":");
+
+		String credential = Credentials.basic(apiKey[0], apiKey[1]);
+
+		RequestBody requestBody = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("from", System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">")
+				.addFormDataPart("to", from)
+				.addFormDataPart("subject", subject)
+				.addFormDataPart("text", bodyText)
+				.build();
+
+		Request request = new Request.Builder()
+				.url(System.getenv("MAIL_API_URL"))
+				.post(requestBody)
+				.header("Authorization", credential)
+				.build();
+
+		try (Response response = client.newCall(request).execute()) {
+			if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+			response.body().string();
+		}
+
 	}
 
 }
