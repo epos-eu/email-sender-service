@@ -156,7 +156,7 @@ public class EmailSenderHandler {
 				response.body().string();
 			}
 		}
-		sendForwardViaAPI(emails, from, subjectForwardedMessage, forwardedMessage+bodyText, firstName, lastName);
+		sendForwardViaAPI(emails, from, subject, forwardedMessage+bodyText, firstName, lastName);
 	}
 
 	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
@@ -166,7 +166,7 @@ public class EmailSenderHandler {
 		if(firstName==null && lastName==null) dear+="User";
 		dear+=",\n";
 		
-		subject = subject+subjectForwardedMessage;
+		subject += subjectForwardedMessage;
 		
 		OkHttpClient client = new OkHttpClient();
 
