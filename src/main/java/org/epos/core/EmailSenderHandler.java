@@ -53,7 +53,7 @@ public class EmailSenderHandler {
 
 	private static Gson gson = new Gson();
 
-	private static String subjectForwardedMessage = "EPOS Data Portal | Receipt Confirmation – Request for Information";
+	private static String subjectForwardedMessage = " | Receipt Confirmation";
 
 	private static String forwardedMessage = "Thank you for your message. \n"
 			+ "We will get in touch with you shortly.\n"
@@ -154,16 +154,19 @@ public class EmailSenderHandler {
 			try (Response response = client.newCall(request).execute()) {
 				if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 				response.body().string();
-				sendForwardViaAPI(emails, from, subjectForwardedMessage, forwardedMessage+bodyText, firstName, lastName);
 			}
 		}
+		sendForwardViaAPI(emails, from, subjectForwardedMessage, forwardedMessage+bodyText, firstName, lastName);
 	}
 
 	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
-		String dear = "Dear User ";
+		String dear = "Dear ";
 		if(firstName!=null) dear+=firstName+" ";
 		if(lastName!=null) dear+=lastName;
+		if(firstName==null && lastName==null) dear+="User";
 		dear+=",\n";
+		
+		subject = subject+subjectForwardedMessage;
 		
 		OkHttpClient client = new OkHttpClient();
 
