@@ -4,13 +4,14 @@ import io.swagger.model.Email;
 import io.swagger.model.ProviderType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
+
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
+import org.epos.core.ContactPointGet;
 import org.epos.core.EmailSenderHandler;
-import org.epos.router_framework.domain.Response;
-import org.epos.router_framework.types.ServiceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -29,11 +30,10 @@ import java.util.Map;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-08-04T13:31:01.781679391Z[GMT]")
 @RestController
-public class SenderApiController extends ApiController implements SenderApi{
+public class SenderApiController implements SenderApi{
 
 	@org.springframework.beans.factory.annotation.Autowired
 	public SenderApiController(ObjectMapper objectMapper, HttpServletRequest request) {
-		super(request);
 		this.objectMapper = objectMapper;
 		this.request = request;
 	}
@@ -67,7 +67,7 @@ public class SenderApiController extends ApiController implements SenderApi{
 				requestParameters.put("lastName", lastName);
 				log.info(requestParameters.toString());
 
-				redirectRequest(ServiceType.SENDER, requestParameters, body);
+				redirectRequest(requestParameters, body);
 
 				return new ResponseEntity<Email>(objectMapper.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class), HttpStatus.ACCEPTED);
 			} catch (IOException e) {
@@ -79,16 +79,11 @@ public class SenderApiController extends ApiController implements SenderApi{
 		return new ResponseEntity<Email>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	private ResponseEntity<Email> redirectRequest(ServiceType service, Map<String, Object> requestParams,Email sendEmail) {
+	private ResponseEntity<Email> redirectRequest(Map<String, Object> requestParams,Email sendEmail) {
 
-		Response response = doRequest(service, requestParams);
-
-		System.out.println(response);
-		System.out.println(response.getPayloadType());
-		System.out.println(response.getPayloadAsPlainText().get());
-		Map<String, Object> handlerResponse;
+		JsonObject response = ContactPointGet.generate(new JsonObject(), requestParams);
 		try {
-			handlerResponse = EmailSenderHandler.handle(response.getPayloadAsPlainText().get(),sendEmail, requestParams);
+			EmailSenderHandler.handle(response,sendEmail, requestParams);
 		} catch (UnsupportedEncodingException | MessagingException e) {
 			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
