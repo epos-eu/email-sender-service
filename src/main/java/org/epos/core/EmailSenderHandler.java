@@ -1,38 +1,20 @@
 package org.epos.core;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
-
 import javax.mail.Authenticator;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.swing.event.ListSelectionEvent;
-import javax.xml.bind.DatatypeConverter;
-
 import org.epos.api.utility.EmailUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.swagger.model.Email;
@@ -49,10 +31,6 @@ public class EmailSenderHandler {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(EmailSenderHandler.class);
 
-	private static final String PARAMS = "params";
-
-	private static Gson gson = new Gson();
-
 	private static String subjectForwardedMessage = " | Receipt Confirmation";
 
 	private static String forwardedMessage = "Thank you for your message. \n"
@@ -60,12 +38,9 @@ public class EmailSenderHandler {
 			+ "Copy of the message.\n\n-----------------------------------------------------\n\n";
 
 
+	public static Map<String, Object> handle(JsonObject payload,Email sendEmail, Map<String, Object> requestParams) throws MessagingException, UnsupportedEncodingException {
 
-	public static Map<String, Object> handle(String payload,Email sendEmail, Map<String, Object> requestParams) throws MessagingException, UnsupportedEncodingException {
-
-		LOGGER.debug(payload);
-		JsonObject payObj = gson.fromJson(payload, JsonObject.class);
-		JsonArray mails = payObj.get("emails").getAsJsonArray();
+		JsonArray mails = payload.get("emails").getAsJsonArray();
 		String from = requestParams.get("email").toString();
 		String firstName = requestParams.get("firstName").toString();
 		String lastName = requestParams.get("lastName").toString();
