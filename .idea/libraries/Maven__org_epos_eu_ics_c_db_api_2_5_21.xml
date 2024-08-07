@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.epos-eu.ics-c:db-api:2.5.21">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/epos-eu/ics-c/db-api/2.5.21/db-api-2.5.21.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/epos-eu/ics-c/db-api/2.5.21/db-api-2.5.21-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/epos-eu/ics-c/db-api/2.5.21/db-api-2.5.21-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

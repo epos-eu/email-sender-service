@@ -50,39 +50,27 @@ public class ContactPointGet {
 			break;
 		case ALL:
 
-			EntityManager em = new DBService().getEntityManager();
+			//EntityManager em = new DBService().getEntityManager();
 
-			List<EDMDistribution> distributionSelectedList = getFromDB(em, EDMDistribution.class,
-					"distribution.findAllByMetaId",
-					"METAID", id);
-			for(EDMDistribution dist : distributionSelectedList) {
+			dbapi.retrieve(Distribution.class, new DBAPIClient.GetQuery().instanceId(id));
+
+			for(Distribution dist : dbapi.retrieve(Distribution.class, new DBAPIClient.GetQuery().instanceId(id))) {
+
 				EDMDataproduct tempDP = null;
-				if (dist.getIsDistributionsByInstanceId() != null && !dist.getIsDistributionsByInstanceId().isEmpty()) {
-					tempDP = dist.getIsDistributionsByInstanceId().stream()
-							.map(EDMIsDistribution::getDataproductByInstanceDataproductId)
-							.filter(edmDataproduct -> edmDataproduct.getState().equals(State.PUBLISHED.toString()))
-							.findFirst().orElse(null);
-				}
-
-				EDMWebservice tempWS = dist.getWebserviceByAccessService() != null && dist.getWebserviceByAccessService().getState().equals(State.PUBLISHED.toString()) ?
-						dist.getWebserviceByAccessService() : null;
-
-				if(tempWS!=null) {
-					for(WebService ws : dbapi.retrieve(WebService.class, new DBAPIClient.GetQuery().instanceId(tempWS.getInstanceId()))) {
-						for(LinkedEntity le : ws.getContactPoint()) {
-							dbapi.retrieve(ContactPoint.class, new DBAPIClient.GetQuery().instanceId(le.getInstanceId()))
-							.forEach(contact-> contact.getEmail().forEach(mail->listEmails.add(mail)));
-						}	
-					}
-				}
-
-				if(tempDP!=null) {
-
-					for(DataProduct dp : dbapi.retrieve(DataProduct.class, new DBAPIClient.GetQuery().instanceId(tempDP.getInstanceId()))) {
+				if (dist.getDataProduct() != null && !dist.getDataProduct().isEmpty()) {
+					System.out.println(dist.getDataProduct().size());
+					for(DataProduct dp : dbapi.retrieve(DataProduct.class, new DBAPIClient.GetQuery().instanceId(dist.getDataProduct().get(0).getInstanceId()))) {
 						for(LinkedEntity le : dp.getContactPoint()) {
 							dbapi.retrieve(ContactPoint.class, new DBAPIClient.GetQuery().instanceId(le.getInstanceId()))
-							.forEach(contact-> contact.getEmail().forEach(mail->listEmails.add(mail)));
-						}	
+									.forEach(contact-> contact.getEmail().forEach(mail->listEmails.add(mail)));
+						}
+					}
+
+					for(WebService ws : dbapi.retrieve(WebService.class, new DBAPIClient.GetQuery().instanceId(dist.getDataProduct().get(0).getInstanceId()))) {
+						for(LinkedEntity le : ws.getContactPoint()) {
+							dbapi.retrieve(ContactPoint.class, new DBAPIClient.GetQuery().instanceId(le.getInstanceId()))
+									.forEach(contact-> contact.getEmail().forEach(mail->listEmails.add(mail)));
+						}
 					}
 				}
 			}
