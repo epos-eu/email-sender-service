@@ -21,13 +21,7 @@ public class ContactPointGet {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ContactPointGet.class);
 
 	private static final DBAPIClient dbapi = new DBAPIClient();
-	
-	public static void main(String[] args) {
-		Map<String, Object> requestParams = new HashMap<String, Object>();
-		requestParams.put("id", "00917e2e-725b-4418-a89c-9effaa236ab2");
-		requestParams.put("type", ProviderType.ALL.toString());
-		ContactPointGet.generate(new JsonObject(), requestParams);
-	}
+
 
 	public static JsonObject generate(JsonObject response, Map<String, Object> requestParams) {
 
