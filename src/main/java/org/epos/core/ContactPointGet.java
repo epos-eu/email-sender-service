@@ -34,8 +34,8 @@ public class ContactPointGet {
 		JsonArray listEmails = new JsonArray();
 		
 		EDMDistribution distributionSelected = getFromDB(em, EDMDistribution.class,
-				"distribution.findByInstanceId",
-				"INSTANCEID", id).get(0);
+				"distribution.findAllByMetaId",
+				"METAID", id).get(0);
 
 		EDMDataproduct dataProduct = null;
 		if (distributionSelected.getIsDistributionsByInstanceId() != null &&
