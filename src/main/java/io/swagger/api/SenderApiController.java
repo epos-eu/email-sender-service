@@ -9,6 +9,8 @@ import com.google.gson.JsonObject;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.mail.MessagingException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.epos.core.ContactPointGet;
 import org.epos.core.EmailSenderHandler;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -82,11 +83,13 @@ public class SenderApiController implements SenderApi{
 	private ResponseEntity<Email> redirectRequest(Map<String, Object> requestParams,Email sendEmail) {
 
 		JsonObject response = ContactPointGet.generate(new JsonObject(), requestParams);
-		try {
-			EmailSenderHandler.handle(response,sendEmail, requestParams);
-		} catch (UnsupportedEncodingException | MessagingException e) {
-			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+		
+			try {
+				EmailSenderHandler.handle(response,sendEmail, requestParams);
+			} catch (UnsupportedEncodingException | MessagingException e) {
+				log.error("Couldn't serialize response for content type application/json", e);
+				return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
 
 		return new ResponseEntity<Email>(HttpStatus.ACCEPTED);
 	}
